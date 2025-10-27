@@ -182,7 +182,9 @@ runs:
       id: ccache-restore
       with:
         path: ${{ env.CCACHE_DIR }}
-        key: ccache-${{ env.KERNEL_FULL_VER }}-${{ env.CONFIG }}-modules
+        key: ccache-${{ env.CONFIG }}-modules-${{ env.KERNEL_FULL_VER }}
+        restore-keys: |
+            ccache-${{ env.CONFIG }}-modules-
       
     - name: Configure ccache
       shell: bash

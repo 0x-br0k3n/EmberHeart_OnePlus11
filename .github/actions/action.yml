@@ -109,7 +109,7 @@ runs:
         sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
           git curl ca-certificates build-essential clang lld flex bison \
           libelf-dev libssl-dev libncurses-dev zlib1g-dev liblz4-tool \
-          libxml2-utils rsync unzip dwarves file python3
+          libxml2-utils rsync unzip dwarves file python3 ccache
         sudo apt-get clean
         echo "::endgroup::"
 
@@ -191,6 +191,46 @@ runs:
         echo "KERNEL_VER=$VERSION.$PATCHLEVEL" >> "$GITHUB_ENV"
         echo "KERNEL_FULL_VER=$ANDROID_VERSION-$FULL_VERSION" >> "$GITHUB_ENV"
         echo "SUSFS_KERNEL_BRANCH=gki-$ANDROID_VERSION-$VERSION.$PATCHLEVEL" >> "$GITHUB_ENV"
+
+    - name: Configure ccache directory
+      shell: bash
+      run: |
+        echo "CCACHE_DIR=$HOME/.ccache_$OP_MODEL" >> $GITHUB_ENV
+        echo "CCACHE_MAXSIZE=5G" >> $GITHUB_ENV
+        echo "Available disk space ："
+        df -h
+
+    - name: Load ccache
+      uses: actions/cache@v4
+      id: ccache-restore
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ccache-${{ env.KERNEL_FULL_VER }}-${{ env.CONFIG }}-kernel
+      
+    - name: Configure ccache
+      shell: bash
+      run: |
+        export CCACHE_COMPILERCHECK="none"
+        export CCACHE_BASEDIR="${{ github.workspace }}"
+        export CCACHE_NOHASHDIR="true"
+        export CCACHE_HARDLINK="true"
+        export CCACHE_DIR="${{ env.CCACHE_DIR }}"
+        export CCACHE_MAXSIZE="${{ env.CCACHE_MAXSIZE }}"
+          
+        mkdir -p "$CCACHE_DIR"
+    
+        echo "ccache size: $CCACHE_MAXSIZE"
+        ccache -M "$CCACHE_MAXSIZE"
+        ccache -o compression=true
+          
+        echo "ccache initial status:"
+        ccache -s
+          
+        # Cache hit 
+        if [ "${{ steps.ccache-restore.outputs.cache-hit }}" == 'true' ]; then
+          echo "ccache cache hit details :"
+          ccache -sv
+        fi
 
     - name: Clone AnyKernel3 and Other Dependencies
       shell: bash
@@ -560,12 +600,21 @@ runs:
         if [ -n "${CLANG_BIN_PATH:-}" ] && [ -x "${CLANG_BIN_PATH}/clang" ]; then
           export PATH="${CLANG_BIN_PATH}:$PATH"
         fi
+        
+        export PATH="/usr/lib/ccache:$PATH"
+        export CCACHE_COMPILERCHECK="none"
+        export CCACHE_BASEDIR="${{ github.workspace }}"
+        export CCACHE_NOHASHDIR="true"
+        export CCACHE_HARDLINK="true"
+        export CCACHE_DIR="${{ env.CCACHE_DIR }}"
+        export CCACHE_MAXSIZE="${{ env.CCACHE_MAXSIZE }}"
+        
         export LLVM=1 LLVM_IAS=1
         export ARCH=arm64 SUBARCH=arm64
         export CROSS_COMPILE=aarch64-linux-android-
         export CROSS_COMPILE_COMPAT=arm-linux-androideabi-
         export LD=ld.lld HOSTLD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip HOSTCC=clang HOSTCXX=clang++
-        export CC=clang
+        export CC=ccache clang
         OUT=out
         mkdir -p "$OUT"
         make O="$OUT" gki_defconfig

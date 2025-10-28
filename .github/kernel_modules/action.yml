@@ -113,9 +113,9 @@ runs:
         mkdir -p "$CONFIG"
         cd "$CONFIG"
         echo "Initializing and syncing kernel source..."
-        if [[ "$OP_MANIFEST" == https://* ]]; then
+        if [[ "$OP_MANIFEST_MODULES" == https://* ]]; then
           mkdir -p .repo/manifests
-          curl --fail --show-error --location --proto '=https' "$OP_MANIFEST" -o .repo/manifests/temp_manifest.xml
+          curl --fail --show-error --location --proto '=https' "$OP_MANIFEST_MODULES" -o .repo/manifests/temp_manifest.xml
           "$REPO" init -u https://github.com/OnePlusOSS/kernel_manifest.git -b oneplus/sm8650 -m temp_manifest.xml --repo-rev=v2.16 --depth=1 --no-clone-bundle --no-tags
         else
           "$REPO" init -u https://github.com/OnePlusOSS/kernel_manifest.git -b "$OP_BRANCH" -m "$OP_MANIFEST" --repo-rev=v2.16 --depth=1 --no-clone-bundle --no-tags

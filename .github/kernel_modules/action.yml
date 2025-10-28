@@ -34,7 +34,7 @@ runs:
         model="$OP_MODEL"
         soc="$OP_SOC"
         branch="$OP_BRANCH"
-        manifest="$OP_MANIFEST"
+        manifest="$OP_MANIFEST_MODULES"
         optimize='${{ inputs.optimize_level }}'
     
         # Non-empty checks

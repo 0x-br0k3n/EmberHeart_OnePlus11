@@ -16,6 +16,15 @@ on:
           - Pre-release
           - Release
         default: none
+      manifest:
+        description: 'Select manifest'
+        required: true
+        type: choice
+        options:
+          - OOS14
+          - OOS15
+          - FAST_BUILD_OOS15
+        default: FAST_BUILD_OOS15
       ksun_branch:
         description: 'Enter KernelSU Next Branch or commit hash (blank for stable tag)'
         required: true
@@ -119,6 +128,7 @@ jobs:
           susfs_commit_hash_or_branch: ${{ steps.get-susfs-branch.outputs.susfs_branch }}
           optimize_level: ${{ inputs.optimize_level }}
           kernel_uname: ${{ inputs.kernel_uname }}
+          manifest: ${{ inputs.manifest }}
           
   build-kernel-modules:
     name: Build Kernel Modules
@@ -137,6 +147,7 @@ jobs:
         uses: ./.github/kernel_modules
         with:
           op_config_json: ${{ toJSON(matrix) }}
+          manifest: ${{ inputs.manifest }}
 
   trigger-release:
     needs:
@@ -149,6 +160,7 @@ jobs:
       REPO_NAME: ${{ github.event.repository.name }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_NAME: 'OnePlus 11 EmberHeart Kernel With KernelSU Next, Nethunter & SUSFS v1.5.12'
+      OS_VERSION: $(echo ${{ inputs.manifest }} | grep -o 'oos[0-9]\+')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -276,12 +288,12 @@ jobs:
         run: |
           gh release create "${{ env.NEW_TAG }}" \
             --repo "${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}" \
-            --title "${{ env.RELEASE_NAME }}" \
+            --title "${{ env.RELEASE_NAME }}-${{ env.OS_VERSION }}" \
             --notes-file release_notes.md
 
       - name: Upload Release Assets Dynamically
         run: |
-          for file in ./downloaded-artifacts/*/*; do
+          for file in ./downloaded-artifacts/*/*.zip; do
             if [ -f "$file" ]; then
               echo "Uploading $file..."
               gh release upload "${{ env.NEW_TAG }}" "$file" --clobber

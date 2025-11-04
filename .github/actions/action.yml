@@ -25,6 +25,10 @@ inputs:
     required: false
     type: string
     default: "EmberHeart"
+  manifest:
+    required: true
+    type: string
+    default: OOS15
 
 outputs:
   kernel_version:
@@ -49,6 +53,12 @@ runs:
         jq -r 'to_entries[] | "OP_\(.key | ascii_upcase)=\(.value)"' /tmp/config.json >> "$GITHUB_ENV"
         echo "Parsed config:"
         jq '.' /tmp/config.json
+        
+    - name: Set Manifest
+      shell: bash
+      run: |
+        set -euo pipefail
+        echo "OP_MANIFEST=$OP_MANIFEST_${{ inputs.manifest }}" >> "$GITHUB_ENV"   
 
     - name: Validate Inputs
       shell: bash
@@ -740,8 +750,6 @@ runs:
     
         # Output for later steps (optional)
         echo "zip_name=$ZIP_NAME" >> "$GITHUB_OUTPUT"
-        
-        rm -rf $ARTIFACTS_DIR/*.txt
         
     - name: Upload Boot Image
       if: success() && steps.create_zip.conclusion == 'success'

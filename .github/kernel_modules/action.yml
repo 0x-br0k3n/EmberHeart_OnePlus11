@@ -356,6 +356,12 @@ runs:
         make ARCH=arm64 LLVM=1 O=out gki_defconfig   
         make -j$(nproc --all) ARCH=arm64 LLVM=1 O=out CC="ccache clang" modules       
         make -j$(nproc --all) ARCH=arm64 LLVM=1 O=out INSTALL_MOD_PATH=$INSTALL_MOD_PATH modules_install
+        
+        echo "Building out of tree external kernel modules..."
+        cd "$KERNEL_PLATFORM"
+        export TARGET_PRODUCT=gki
+        export TARGET_BOARD_PLATFORM=gki
+        make -j$(nproc --all) ARCH=arm64 LLVM=1 -C ../vendor/qcom/opensource/wlan/qcacld-3.0/ M=../vendor/qcom/opensource/wlan/qcacld-3.0/ KERNEL_SRC=$MSM O=$MSM/out
 
     - name: Filter modules
       shell: bash

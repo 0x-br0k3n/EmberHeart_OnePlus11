@@ -359,9 +359,8 @@ runs:
         
         echo "Building out of tree external kernel modules..."
         cd "$KERNEL_PLATFORM"
-        export TARGET_PRODUCT=gki
-        export TARGET_BOARD_PLATFORM=gki
-        make -j$(nproc --all) ARCH=arm64 LLVM=1 -C ../vendor/qcom/opensource/wlan/qcacld-3.0/ M=../vendor/qcom/opensource/wlan/qcacld-3.0/ KERNEL_SRC=$MSM O=$MSM/out
+        QCA_WLAN_DIR="$GITHUB_WORKSPACE/$CONFIG/vendor/qcom/opensource/wlan/qcacld-3.0/"
+        make -j$(nproc --all) ARCH=arm64 LLVM=1 -C $MSM M=$QCA_WLAN_DIR KERNEL_SRC=$MSM O=$MSM/out all
 
     - name: Filter modules
       shell: bash

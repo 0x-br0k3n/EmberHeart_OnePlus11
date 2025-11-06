@@ -237,10 +237,6 @@ runs:
         KERNEL_PATH="$GITHUB_WORKSPACE/$CONFIG/kernel_platform"
         MSM="$KERNEL_PATH/msm-kernel"
         cd "$MSM"
-        
-        # Merge defconfig fragments from vendor/kalama_GKI.config
-        cat arch/arm64/configs/vendor/kalama_GKI.config >> ./arch/arm64/configs/gki_defconfig
-        
         cat >> arch/arm64/configs/gki_defconfig <<EOF
 
         CONFIG_WLAN_VENDOR_REALTEK=y
@@ -278,7 +274,6 @@ runs:
         
         CONFIG_MAC80211_LEDS=m
 
-        CONFIG_QCA_CLD_WLAN=m
         EOF
 
     - name: Add memkernel module
@@ -345,6 +340,9 @@ runs:
         
         MSM="$KERNEL_PLATFORM/msm-kernel"
         cd "$MSM"
+
+        # Merge defconfig fragments from vendor/kalama_GKI.config
+        cat arch/arm64/configs/vendor/kalama_GKI.config >> ./arch/arm64/configs/gki_defconfig
 
         # Thin LTO
         echo "CONFIG_LTO_CLANG_THIN=y" >> ./arch/arm64/configs/gki_defconfig                                                                            

@@ -360,7 +360,7 @@ runs:
         echo "Building out of tree external kernel modules..."
         cd "$KERNEL_PLATFORM"
         QCA_WLAN_DIR="$GITHUB_WORKSPACE/$CONFIG/vendor/qcom/opensource/wlan/qcacld-3.0/"
-        make -j$(nproc --all) ARCH=arm64 LLVM=1 -C $MSM M=$QCA_WLAN_DIR KERNEL_SRC=$MSM O=$MSM/out all
+        make -j$(nproc --all) ARCH=arm64 LLVM=1 -C $QCA_WLAN_DIR M=$QCA_WLAN_DIR KERNEL_SRC=$MSM O=$MSM/out all
 
     - name: Filter modules
       shell: bash

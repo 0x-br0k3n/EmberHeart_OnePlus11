@@ -621,18 +621,6 @@ runs:
         export CCACHE_DIR="${{ env.CCACHE_DIR }}"
         export CCACHE_MAXSIZE="${{ env.CCACHE_MAXSIZE }}"
         
-        echo "BUILD_USER=OnePlus" >> "$GITHUB_ENV"
-        echo "BUILD_HOST=ubuntu-build" >> "$GITHUB_ENV"
-        COMMIT_TIMESTAMP=$(git log -1 --format=%ct 2>/dev/null || echo "$(date +%s)")
-        COMMIT_DATE=$(git log -1 --format=%cd --date=format:'%Y-%m-%d %H:%M:%S' 2>/dev/null || date -u '+%Y-%m-%d %H:%M:%S')
-        COMMIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-        
-        export SOURCE_DATE_EPOCH=$COMMIT_TIMESTAMP
-        export KBUILD_BUILD_TIMESTAMP="$COMMIT_DATE UTC"
-        export KBUILD_BUILD_USER="${BUILD_USER:-builder}"
-        export KBUILD_BUILD_HOST="${BUILD_HOST:-github-actions}"
-        export KBUILD_BUILD_VERSION=1
-        
         export LLVM=1 LLVM_IAS=1
         export ARCH=arm64 SUBARCH=arm64
         export CROSS_COMPILE=aarch64-linux-android-
@@ -662,7 +650,7 @@ runs:
         fi
         
         # Consistent flags; include -pipe and disable stack protector
-        KCFLAGS="-Wno-error -pipe -fno-stack-protector -fdebug-compilation-dir=. ${KCFLAGS_EXTRA}"
+        KCFLAGS="-Wno-error -pipe -fno-stack-protector ${KCFLAGS_EXTRA}"
         KCPPFLAGS="-DCONFIG_OPTIMIZE_INLINING"
         
         # Regenerate defaults after config edits

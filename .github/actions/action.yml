@@ -495,6 +495,19 @@ runs:
         
         CONFIG_USB_AIRSPY=y
         CONFIG_USB_HACKRF=y
+        
+        CONFIG_CAN=y
+        CONFIG_CAN_DEV=y
+        CONFIG_CAN_CALC_BITTIMING=y
+        CONFIG_CAN_LEDS=y
+        CONFIG_CAN_VCAN=y
+        
+        CONFIG_USB_SERIAL=y
+        CONFIG_USB_SERIAL_CONSOLE=y
+        CONFIG_USB_SERIAL_GENERIC=y
+        CONFIG_USB_SERIAL_CH341=y
+        CONFIG_USB_SERIAL_FTDI_SIO=y
+        CONFIG_USB_SERIAL_PL2303=y     
         EOF
 
     - name: Add TTL Target Support

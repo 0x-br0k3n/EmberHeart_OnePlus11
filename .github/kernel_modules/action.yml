@@ -20,6 +20,10 @@ inputs:
 
 runs:
   using: composite
+  env:
+    CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
+    CCACHE_NOHASHDIR: "true"
+    CCACHE_HARDLINK: "true"
   steps:
     - name: Parse op_config_json
       shell: bash
@@ -179,48 +183,12 @@ runs:
         echo "KERNEL_FULL_VER=$ANDROID_VERSION-$FULL_VERSION" >> "$GITHUB_ENV"
         echo "SUSFS_KERNEL_BRANCH=gki-$ANDROID_VERSION-$VERSION.$PATCHLEVEL" >> "$GITHUB_ENV"
 
-    - name: Configure ccache directory
-      shell: bash
-      run: |
-        echo "CCACHE_DIR=$HOME/.ccache_$OP_MODEL" >> $GITHUB_ENV
-        echo "CCACHE_MAXSIZE=5G" >> $GITHUB_ENV
-        echo "Available disk space ："
-        df -h
 
-    - name: Load ccache
-      uses: actions/cache@v4
-      id: ccache-restore
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1
       with:
-        path: ${{ env.CCACHE_DIR }}
         key: ccache-${{ env.CONFIG }}-modules-${{ env.KERNEL_FULL_VER }}
-        restore-keys: |
-            ccache-${{ env.CONFIG }}-modules-
-      
-    - name: Configure ccache
-      shell: bash
-      run: |
-        export CCACHE_COMPILERCHECK="none"
-        export CCACHE_BASEDIR="${{ github.workspace }}"
-        export CCACHE_NOHASHDIR="true"
-        export CCACHE_HARDLINK="true"
-        export CCACHE_DIR="${{ env.CCACHE_DIR }}"
-        export CCACHE_MAXSIZE="${{ env.CCACHE_MAXSIZE }}"
-          
-        mkdir -p "$CCACHE_DIR"
-    
-        echo "ccache size: $CCACHE_MAXSIZE"
-        ccache -M "$CCACHE_MAXSIZE"
-        ccache -o compression=true
-          
-        echo "ccache initial status:"
-        ccache -s
-          
-        # Cache hit 
-        if [ "${{ steps.ccache-restore.outputs.cache-hit }}" == 'true' ]; then
-          echo "ccache cache hit details :"
-          ccache -sv
-        fi
-        
+        max-size: 5G
 
     - name: Clean Up ABI Protected Exports
       shell: bash
@@ -370,12 +338,6 @@ runs:
         export PATH="${CLANG_BIN_PATH}:$PATH"
         
         export PATH="/usr/lib/ccache:$PATH"
-        export CCACHE_COMPILERCHECK="none"
-        export CCACHE_BASEDIR="${{ github.workspace }}"
-        export CCACHE_NOHASHDIR="true"
-        export CCACHE_HARDLINK="true"
-        export CCACHE_DIR="${{ env.CCACHE_DIR }}"
-        export CCACHE_MAXSIZE="${{ env.CCACHE_MAXSIZE }}"
         
         MSM="$KERNEL_PLATFORM/msm-kernel"
         cd "$MSM"

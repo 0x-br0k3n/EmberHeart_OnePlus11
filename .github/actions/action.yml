@@ -44,10 +44,6 @@ outputs:
 
 runs:
   using: composite
-  env:
-    CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
-    CCACHE_NOHASHDIR: "true"
-    CCACHE_HARDLINK: "true"
   steps:
     - name: Parse op_config_json
       shell: bash

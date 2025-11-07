@@ -242,45 +242,7 @@ runs:
         
         CONFIG_MAC80211_LEDS=m
 
-        CONFIG_CAN=m
         CONFIG_CAN_SLCAN=m
-        
-        CONFIG_CAN_GRCAN=m
-        CONFIG_CAN_XILINXCAN=m
-        
-        # Bosch C_CAN/D_CAN devices
-        CONFIG_CAN_C_CAN=m
-        CONFIG_CAN_C_CAN_PLATFORM=m
-        CONFIG_CAN_C_CAN_PCI=m
-        
-        # Bosch CC770 and Intel AN82527 devices
-        CONFIG_CAN_CC770=m
-        CONFIG_CAN_CC770_ISA=m
-        CONFIG_CAN_CC770_PLATFORM=m
-        
-        # Bosch M_CAN devices
-        CONFIG_CAN_M_CAN=m
-        CONFIG_CAN_M_CAN_PCI=m
-        CONFIG_CAN_M_CAN_PLATFORM=m
-        CONFIG_CAN_M_CAN_TCAN4X5X=m
-        
-        # CAN SPI interfaces
-        CONFIG_CAN_HI311X=m
-        CONFIG_CAN_MCP251X=m
-        
-        # CAN USB interfaces
-        CONFIG_CAN_8DEV_USB=m
-        CONFIG_CAN_EMS_USB=m
-        CONFIG_CAN_ESD_USB2=m
-        CONFIG_CAN_GS_USB=m
-        CONFIG_CAN_KVASER_USB=m
-        CONFIG_CAN_PEAK_USB=m
-        
-        CONFIG_NETLINK_DIAG=m
-        CONFIG_VSOCKETS=m
-        
-        CONFIG_NET_SCHED=m
-        CONFIG_NET_EMATCH_CANID=m
         EOF
 
     - name: Add memkernel module

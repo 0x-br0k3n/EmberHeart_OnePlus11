@@ -470,12 +470,49 @@ runs:
         CONFIG_CAN_LEDS=y
         CONFIG_CAN_VCAN=y
         
+        CONFIG_CAN_GRCAN=y
+        CONFIG_CAN_XILINXCAN=y
+        
+        # Bosch C_CAN/D_CAN devices
+        CONFIG_CAN_C_CAN=y
+        CONFIG_CAN_C_CAN_PLATFORM=y
+        CONFIG_CAN_C_CAN_PCI=y
+        
+        # Bosch CC770 and Intel AN82527 devices
+        CONFIG_CAN_CC770=y
+        CONFIG_CAN_CC770_ISA=y
+        CONFIG_CAN_CC770_PLATFORM=y
+        
+        # Bosch M_CAN devices
+        CONFIG_CAN_M_CAN=y
+        CONFIG_CAN_M_CAN_PCI=y
+        CONFIG_CAN_M_CAN_PLATFORM=y
+        CONFIG_CAN_M_CAN_TCAN4X5X=y
+        
+        # CAN SPI interfaces
+        CONFIG_CAN_HI311X=y
+        CONFIG_CAN_MCP251X=y
+        
+        # CAN USB interfaces
+        CONFIG_CAN_8DEV_USB=y
+        CONFIG_CAN_EMS_USB=y
+        CONFIG_CAN_ESD_USB2=y
+        CONFIG_CAN_GS_USB=y
+        CONFIG_CAN_KVASER_USB=y
+        CONFIG_CAN_PEAK_USB=y
+        
+        CONFIG_NETLINK_DIAG=y
+        CONFIG_VSOCKETS=y
+        
+        CONFIG_NET_SCHED=y
+        CONFIG_NET_EMATCH_CANID=y
+        
         CONFIG_USB_SERIAL=y
         CONFIG_USB_SERIAL_CONSOLE=y
         CONFIG_USB_SERIAL_GENERIC=y
         CONFIG_USB_SERIAL_CH341=y
         CONFIG_USB_SERIAL_FTDI_SIO=y
-        CONFIG_USB_SERIAL_PL2303=y     
+        CONFIG_USB_SERIAL_PL2303=y
         EOF
 
     - name: Add TTL Target Support

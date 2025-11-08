@@ -203,10 +203,14 @@ runs:
         echo "SUSFS_KERNEL_BRANCH=gki-$ANDROID_VERSION-$VERSION.$PATCHLEVEL" >> "$GITHUB_ENV"
 
     - name: Setup ccache
-      uses: hendrikmuhs/ccache-action@v1
+      uses: hendrikmuhs/ccache-action@v1.2.19
       with:
         key: ccache-${{ env.CONFIG }}-kernel-${{ env.KERNEL_FULL_VER }}
         max-size: 5G
+        append-timestamp: false
+        create-symlink: true
+        job-summary: 'CCache stats'
+        evict-old-files: 'job'
 
     - name: Clone AnyKernel3 and Other Dependencies
       shell: bash

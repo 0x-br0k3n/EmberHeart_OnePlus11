@@ -811,7 +811,9 @@ runs:
           echo "Optimization: ${{ inputs.optimize_level }}"
           echo "Image SHA256: ${{ steps.collect_stats.outputs.image_sha256 }}"
           echo "Compiler: ${CLANG_VERSION:-unknown}"
-          echo "Warnings Count: ${{ steps.collect_stats.outputs.warnings_count }}"
+          echo ""
+          echo "CCache Statistics :"
+          echo "$(ccache -s -v)"
         } | tee summary.txt
         {
           echo "### Kernel Build Summary"
@@ -826,7 +828,9 @@ runs:
           echo "- SUSFS commit SHA: [${{ env.SUSFS_COMMIT_SHA }}](https://gitlab.com/simonpunk/susfs4ksu/-/commit/${{ env.SUSFS_COMMIT_SHA }})"
           echo "- Optimization: ${{ inputs.optimize_level }}"
           echo "- Image SHA256: ${{ steps.collect_stats.outputs.image_sha256 }}"
-          echo "- Warnings Count: ${{ steps.collect_stats.outputs.warnings_count }}"
+          echo ""
+          echo "CCache Statistics :"
+          echo "$(/usr/bin/ccache -s)"
         } >> "$GITHUB_STEP_SUMMARY"
 
     - name: Upload Artifacts

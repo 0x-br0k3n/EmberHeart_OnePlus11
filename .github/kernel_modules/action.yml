@@ -370,6 +370,21 @@ runs:
         mkdir -p "$CONFIG_DIR/artifacts"
         find "$MODULES_SRC" -type f -name '*.ko' -print0 | xargs -0 zip -j "$MODULES_ZIP"
         echo "Packaged kernel modules to $MODULES_ZIP"
+        
+    - name: Final Build Summary
+      shell: bash
+      run: |
+        set -euo pipefail
+        {
+          echo "CCache Statistics :"
+          echo "$(/usr/bin/ccache -s)"
+        } | tee summary.txt
+        {
+          echo "### Kernel Modules Build Summary"
+          echo ""
+          echo "CCache Statistics :"
+          echo "$(ccache -s -v)"
+        } >> "$GITHUB_STEP_SUMMARY"
 
     - name: Upload Kernel Modules zip
       if: success() && steps.create_zip.conclusion == 'success'

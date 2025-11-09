@@ -296,12 +296,12 @@ runs:
       run: |
         set -euo pipefail
         KERNEL_PLATFORM="$GITHUB_WORKSPACE/$CONFIG/kernel_platform"
-
-        export PATH="${CLANG_BIN_PATH}:$PATH"
-        
+        MSM="$KERNEL_PLATFORM/msm-kernel"
+        OUT=out
+        export PATH="${CLANG_BIN_PATH}:$PATH" 
         export PATH="/usr/lib/ccache:$PATH"
         
-        MSM="$KERNEL_PLATFORM/msm-kernel"
+        
         cd "$MSM"
 
         # Merge defconfig fragments from vendor/kalama_GKI.config

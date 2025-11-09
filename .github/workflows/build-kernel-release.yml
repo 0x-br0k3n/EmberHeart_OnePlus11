@@ -168,7 +168,7 @@ jobs:
       REPO_NAME: ${{ github.event.repository.name }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_NAME: 'OnePlus 11 EmberHeart Kernel With KernelSU Next, Nethunter & SUSFS v1.5.12'
-      OS_VERSION: $(echo ${{ inputs.manifest }} | grep -o 'oos[0-9]\+')
+      OS_VERSION: $(grep -o 'oos[0-9]\+' <<< "${{ inputs.manifest }}")
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -287,7 +287,7 @@ jobs:
         run: |
           gh release create "${{ env.NEW_TAG }}" \
             --repo "${{ env.REPO_OWNER }}/${{ env.REPO_NAME }}" \
-            --title "*Test-build*-${{ env.RELEASE_NAME }}-*Test Build*" \
+            --title "*Test-build*-${{ env.RELEASE_NAME }}-${{ env.OS_VERSION }}*Test Build*" \
             --notes-file release_notes.md \
             --prerelease
        

@@ -205,7 +205,7 @@ runs:
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2.19
       with:
-        key: ccache-${{ env.CONFIG }}-kernel-${{ env.KERNEL_FULL_VER }}
+        key: ${{ env.CONFIG }}-kernel-${{ env.KERNEL_FULL_VER }}
         max-size: 5G
         append-timestamp: false
         create-symlink: true
@@ -838,7 +838,7 @@ runs:
       run: |
         set -euo pipefail
         echo "Deleting old ccache..."
-        gh cache delete ccache-${{ env.CONFIG }}-kernel-${{ env.KERNEL_FULL_VER }}-
+        gh cache delete ccache-${{ env.CONFIG }}-kernel-${{ env.KERNEL_FULL_VER }}- || true
         
     - name: Upload Artifacts
       if: success() && steps.create_zip.conclusion == 'success'

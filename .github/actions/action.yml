@@ -832,7 +832,14 @@ runs:
           echo "CCache Statistics :"
           echo "$(/usr/bin/ccache -s)"
         } >> "$GITHUB_STEP_SUMMARY"
-
+        
+    - name: Cleanup old ccache
+      shell: bash
+      run: |
+        set -euo pipefail
+        echo "Deleting old ccache..."
+        gh cache delete ccache-${{ env.CONFIG }}-kernel-${{ env.KERNEL_FULL_VER }}
+        
     - name: Upload Artifacts
       if: success() && steps.create_zip.conclusion == 'success'
       uses: actions/upload-artifact@v4

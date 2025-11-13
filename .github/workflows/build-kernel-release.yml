@@ -103,6 +103,7 @@ jobs:
     needs: set-op-model
     runs-on: ubuntu-latest
     env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
       CCACHE_HARDLINK: "true"
@@ -139,6 +140,7 @@ jobs:
     needs: set-op-model
     runs-on: ubuntu-latest
     env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
       CCACHE_HARDLINK: "true"

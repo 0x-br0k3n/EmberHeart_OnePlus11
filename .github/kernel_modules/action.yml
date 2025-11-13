@@ -394,7 +394,7 @@ runs:
       run: |
         set -euo pipefail
         echo "Deleting old ccache..."
-        gh cache delete ccache-${{ env.CONFIG }}-kernel-${{ env.KERNEL_FULL_VER }}
+        gh cache delete ccache-${{ env.CONFIG }}-kernel-${{ env.KERNEL_FULL_VER }}-
 
     - name: Upload Kernel Modules zip
       if: success() && steps.create_zip.conclusion == 'success'

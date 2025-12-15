@@ -9,10 +9,10 @@ inputs:
     description: 'JSON string containing full device config'
     required: true
     type: string
-  ksun_branch:
+  ksun_branch_or_hash:
     required: true
     type: string
-    default: stable
+    default:
   susfs_commit_hash_or_branch:
     required: false
     type: string
@@ -262,18 +262,42 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Add KernelSU Next"
         cd "$CONFIG/kernel_platform"
         echo "Adding KernelSU Next..."
-        if [ "${{ inputs.ksun_branch }}" = "stable" ]; then
+        if [ "${{ inputs.ksu_branch_or_hash }}" = "" ]; then
           curl --fail --location --proto '=https' -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
         else
-          curl --fail --location --proto '=https' -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s "${{ inputs.ksun_branch }}"
+          curl --fail --location --proto '=https' -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s "${{ inputs.ksu_branch_or_hash }}"
         fi
         git submodule update --init --recursive
-        cd KernelSU-Next
-        KSUN_COMMIT_SHA=$(git rev-parse HEAD)
-        echo "KSUN_COMMIT_SHA=$KSUN_COMMIT_SHA" >> $GITHUB_ENV
+        cd KernelSU-Next/kernel
+
+        COMMITS_COUNT=$(/usr/bin/git rev-list --count HEAD)
+
+        if [ $COMMITS_COUNT -lt 2684 ]; then
+          BASE_VERSION=10200
+        else
+          BASE_VERSION=30000
+        fi
+
+        KSU_VERSION=$(expr $COMMITS_COUNT "+" $BASE_VERSION)
+        sed -i "s/DKSU_VERSION=11998/DKSU_VERSION=${KSU_VERSION}/" Makefile
+
+        if [ "$KSU_VERSION" -lt 12884 ]; then
+          echo "NEED_HOOKS=true" >> $GITHUB_ENV
+        else
+          echo "NEED_HOOKS=false" >> $GITHUB_ENV
+        fi
+
         cd ..
+        KSU_COMMIT_SHA=$(git rev-parse HEAD)
+        echo "KSU_COMMIT_SHA=$KSU_COMMIT_SHA" >> $GITHUB_ENV
+
+        echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
+        echo "KernelSU Next Version: $KSU_VERSION"
+        echo "✅ KernelSU Next added (commit: ${KSU_COMMIT_SHA:0:8})"
+        echo "::endgroup::"
 
     - name: Apply SUSFS Patches
       shell: bash
@@ -296,10 +320,8 @@ runs:
         echo "KernelSU Next Version: $KSU_VERSION"
         echo "SusFS Version: $susfs_version"
         case "$susfs_version" in
-          "v1.5.5"|"v1.5.6"|"v1.5.7")
-            cp "../../../kernel_patches/next/0001-kernel-implement-susfs-v1.5.5-v1.5.7-KSUN-v1.0.8.patch" "./ksun_susfs_latest.patch"
-            ;;
           "v1.5.8")
+            cd ./KernelSU-Next
             cp ../../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./
             patch -p1 --forward --fuzz=3 < 10_enable_susfs_for_ksu.patch  || true
             cp "../../../kernel_patches/next/susfs_fix_patches/$susfs_version/fix_apk_sign.c.patch" ./
@@ -312,6 +334,7 @@ runs:
             patch -p1 --forward --fuzz=3 < fix_ksud.c.patch
             ;;
           "v1.5.9"|"v1.5.10"|"v1.5.11"|"v1.5.12")
+            cd ./KernelSU-Next
             cp ../../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./
             patch -p1 --forward < 10_enable_susfs_for_ksu.patch  || true
             for file in $(find ./kernel -maxdepth 2 -name "*.rej" -printf "%f\n" | cut -d'.' -f1); do
@@ -320,8 +343,30 @@ runs:
             done
             patch -p1 --forward < "../../../kernel_patches/next/susfs_fix_patches/$susfs_version/fix_kernel_compat.c.patch"
             ;;
+          "v2.0.0")
+            cd ./KernelSU-Next
+            cp ../../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./
+            patch -p1 --forward < 10_enable_susfs_for_ksu.patch  || true
+
+            if ! grep -qF 'static void ksu_install_manager_fd_tw_func(struct callback_head *cb)' ./kernel/setuid_hook.c; then
+              sed -i '/static inline bool is_allow_su()/istatic void ksu_install_manager_fd_tw_func(struct callback_head *cb){ ksu_install_fd(); kfree(cb);}' ./kernel/setuid_hook.c
+            fi
+
+            if ! grep -qxF 'if (ksu_get_manager_appid() == new_uid % PER_USER_RANGE)' ./kernel/setuid_hook.c; then
+              sed -i 's/if (ksu_get_manager_appid() == new_uid % PER_USER_RANGE)/if (ksu_get_manager_uid() == new_uid % PER_USER_RANGE)/' ./kernel/setuid_hook.c
+            fi
+
+            if ! grep -qF 'define KERNEL_SU_DOMAIN "su"' ./kernel/selinux/selinux.h; then
+              sed -i '/void setup_selinux/i#define KERNEL_SU_DOMAIN "su"\n#define KERNEL_SU_FILE "ksu_file"\n\n#define KERNEL_SU_CONTEXT "u:r:" KERNEL_SU_DOMAIN ":s0"\n#define KSU_FILE_CONTEXT "u:object_r:" KERNEL_SU_FILE ":s0"\n' ./kernel/selinux/selinux.h
+            fi
+
+            for file in $(find ./kernel -maxdepth 2 -name "*.rej" -exec basename {} .rej \;); do
+              echo "Patching file: $file with fix_$file.patch"
+              patch -p1 --forward < "../../../kernel_patches/next/susfs_fix_patches/$susfs_version/fix_$file.patch"
+            done
+            ;;
           *)
-            echo "Invalid version: $susfs_version"
+            echo "::error::Unsupported SUSFS version: $susfs_version"
             exit 1
             ;;
         esac
@@ -332,7 +377,7 @@ runs:
             sed -i '/#include <trace\/hooks\/blk.h>/a #include <trace\/hooks\/fs.h>' ./fs/namespace.c
           fi
         fi
-        
+
         # Fake kernel patch to fix failures
         fake_patched=0
         if [ "${{ env.ANDROID_VER }}" = "android15" ] && [ "${{ env.KERNEL_VER }}" = "6.6" ]; then
@@ -354,9 +399,9 @@ runs:
             fake_patched=1
           fi
         fi
-        
+
         patch -p1 < 50_add_susfs_in_${{ env.SUSFS_KERNEL_BRANCH }}.patch
-        
+
         # Revert Fake kernel patch
         if [ "$fake_patched" = 1 ]; then
           if [ "${{ env.ANDROID_VER }}" = "android15" ] && [ "${{ env.KERNEL_VER }}" = "6.6" ]; then
@@ -378,7 +423,7 @@ runs:
             fi
           fi
         fi
-        
+
         KERNEL_VERSION="${{ env.KERNEL_VER }}"
         MIN_VERSION="5.16"
         if [ "$(printf '%s\n' "$KERNEL_VERSION" "$MIN_VERSION" | sort -V | head -n1)" = "$KERNEL_VERSION" ]; then

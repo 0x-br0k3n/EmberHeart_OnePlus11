@@ -12,7 +12,7 @@ inputs:
   ksun_branch_or_hash:
     required: true
     type: string
-    default:
+    default: ""
   susfs_commit_hash_or_branch:
     required: false
     type: string
@@ -265,10 +265,10 @@ runs:
         echo "::group::Add KernelSU Next"
         cd "$CONFIG/kernel_platform"
         echo "Adding KernelSU Next..."
-        if [ "${{ inputs.ksu_branch_or_hash }}" = "" ]; then
+        if [ "${{ inputs.ksun_branch_or_hash }}" = "" ]; then
           curl --fail --location --proto '=https' -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
         else
-          curl --fail --location --proto '=https' -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s "${{ inputs.ksu_branch_or_hash }}"
+          curl --fail --location --proto '=https' -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s "${{ inputs.ksun_branch_or_hash }}"
         fi
         git submodule update --init --recursive
         cd KernelSU-Next/kernel
@@ -348,17 +348,17 @@ runs:
             cp ../../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./
             patch -p1 --forward < 10_enable_susfs_for_ksu.patch  || true
 
-            if ! grep -qF 'static void ksu_install_manager_fd_tw_func(struct callback_head *cb)' ./kernel/setuid_hook.c; then
-              sed -i '/static inline bool is_allow_su()/istatic void ksu_install_manager_fd_tw_func(struct callback_head *cb){ ksu_install_fd(); kfree(cb);}' ./kernel/setuid_hook.c
-            fi
+              # if ! grep -qF 'static void ksu_install_manager_fd_tw_func(struct callback_head *cb)' ./kernel/setuid_hook.c; then
+                # sed -i '/static inline bool is_allow_su()/istatic void ksu_install_manager_fd_tw_func(struct callback_head *cb){ ksu_install_fd(); kfree(cb);}' ./kernel/setuid_hook.c
+              # fi
 
-            if ! grep -qxF 'if (ksu_get_manager_appid() == new_uid % PER_USER_RANGE)' ./kernel/setuid_hook.c; then
-              sed -i 's/if (ksu_get_manager_appid() == new_uid % PER_USER_RANGE)/if (ksu_get_manager_uid() == new_uid % PER_USER_RANGE)/' ./kernel/setuid_hook.c
-            fi
+              # if ! grep -qxF 'if (ksu_get_manager_appid() == new_uid % PER_USER_RANGE)' ./kernel/setuid_hook.c; then
+                # sed -i 's/if (ksu_get_manager_appid() == new_uid % PER_USER_RANGE)/if (ksu_get_manager_uid() == new_uid % PER_USER_RANGE)/' ./kernel/setuid_hook.c
+              # fi
 
-            if ! grep -qF 'define KERNEL_SU_DOMAIN "su"' ./kernel/selinux/selinux.h; then
-              sed -i '/void setup_selinux/i#define KERNEL_SU_DOMAIN "su"\n#define KERNEL_SU_FILE "ksu_file"\n\n#define KERNEL_SU_CONTEXT "u:r:" KERNEL_SU_DOMAIN ":s0"\n#define KSU_FILE_CONTEXT "u:object_r:" KERNEL_SU_FILE ":s0"\n' ./kernel/selinux/selinux.h
-            fi
+              # if ! grep -qF 'define KERNEL_SU_DOMAIN "su"' ./kernel/selinux/selinux.h; then
+                # sed -i '/void setup_selinux/i#define KERNEL_SU_DOMAIN "su"\n#define KERNEL_SU_FILE "ksu_file"\n\n#define KERNEL_SU_CONTEXT "u:r:" KERNEL_SU_DOMAIN ":s0"\n#define KSU_FILE_CONTEXT "u:object_r:" KERNEL_SU_FILE ":s0"\n' ./kernel/selinux/selinux.h
+              # fi
 
             for file in $(find ./kernel -maxdepth 2 -name "*.rej" -exec basename {} .rej \;); do
               echo "Patching file: $file with fix_$file.patch"

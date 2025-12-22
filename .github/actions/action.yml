@@ -346,6 +346,7 @@ runs:
           "v2.0.0")
             cd ./KernelSU-Next
             cp ../../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./
+
             patch -p1 --forward < 10_enable_susfs_for_ksu.patch  || true
 
             for file in $(find ./kernel -maxdepth 2 -name "*.rej" -exec basename {} .rej \;); do
@@ -353,6 +354,11 @@ runs:
               patch -p1 --forward < "../../../kernel_patches/next/susfs_fix_patches/$susfs_version/fix_$file.patch"
             done
             patch -p1 --forward < "../../../kernel_patches/next/susfs_fix_patches/$susfs_version/overwrite_hook_mode.patch"
+            rm -rf ./kernel/tiny_sulog.c
+            cp "../../../kernel_patches/next/susfs_fix_patches/$susfs_version/tiny_sulog.c" ./kernel/tiny_sulog.c
+            patch -p1 --forward < "../../../kernel_patches/next/susfs_fix_patches/$susfs_version/ksu_toolkit.patch"
+            # Add Pershoot tracepoint fix for no root
+            curl -Ls https://github.com/pershoot/KernelSU-Next/commit/249d468099c180b7159c240b3f3ecffe8c8d3a6f.patch | patch -p1 || true
             ;;
           *)
             echo "::error::Unsupported SUSFS version: $susfs_version"
@@ -605,6 +611,9 @@ runs:
         CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y
         CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3=n
         CONFIG_OPTIMIZE_INLINING=y
+
+        CONFIG_FRAME_WARN=0
+        CONFIG_TRACEPOINTS=y
         EOF
 
     - name: Save Build Metadata

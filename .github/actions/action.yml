@@ -354,11 +354,7 @@ runs:
               patch -p1 --forward < "../../../kernel_patches/next/susfs_fix_patches/$susfs_version/fix_$file.patch"
             done
             patch -p1 --forward < "../../../kernel_patches/next/susfs_fix_patches/$susfs_version/overwrite_hook_mode.patch"
-            rm -rf ./kernel/tiny_sulog.c
-            cp "../../../kernel_patches/next/susfs_fix_patches/$susfs_version/tiny_sulog.c" ./kernel/tiny_sulog.c
             patch -p1 --forward < "../../../kernel_patches/next/susfs_fix_patches/$susfs_version/ksu_toolkit.patch"
-            # Add Pershoot tracepoint fix for no root
-            curl -Ls https://github.com/pershoot/KernelSU-Next/commit/249d468099c180b7159c240b3f3ecffe8c8d3a6f.patch | patch -p1 || true
             ;;
           *)
             echo "::error::Unsupported SUSFS version: $susfs_version"

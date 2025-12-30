@@ -138,6 +138,14 @@ runs:
         fi
         echo "REPO=$REPO" >> "$GITHUB_ENV"
 
+    - name: Optimize Global Git for Repo Tool
+      shell: bash
+      run: |
+        set -euo pipefail
+        git config --global feature.manyFiles true
+        git config --global core.fsmonitor true
+        git config --global pack.sparse true
+
     - name: Initialize and Sync Kernel Source
       shell: bash
       run: |

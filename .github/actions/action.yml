@@ -435,9 +435,9 @@ runs:
         fi
         echo "CONFIG_BBG=y" >> common/arch/arm64/configs/gki_defconfig
         sed -i '/^config LSM$/,/^help$/{ /^[[:space:]]*default/ { /baseband_guard/! s/selinux/selinux,baseband_guard/ } }' common/security/Kconfig
-        cd ./KernelSU-Next
-        echo "Patching BBG Enhanced Security!"
-        patch -p1 --forward < "../../../kernel_patches/common/bbg_untrusted_cred.patch"
+        # cd ./KernelSU-Next
+        # echo "Patching BBG Enhanced Security!"
+        # patch -p1 --forward < "../../../kernel_patches/common/bbg_untrusted_cred.patch"
         echo "✅ BBG LSM added"
         echo "::endgroup::"
 

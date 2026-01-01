@@ -335,6 +335,18 @@ runs:
         echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
         echo "KernelSU Next Version: $KSU_VERSION"
         echo "SusFS Version: $susfs_version"
+
+        # Function to compare semantic versions
+        version_lte() {
+          [ "$(printf '%s\n' "$2" "$1" | sort -V | head -n1)" = "$1" ]
+        }
+
+        if version_lte "${susfs_version:1}" "1.5.12"; then
+          echo "NEED_HOOKS=true" >> $GITHUB_ENV
+        else
+          echo "NEED_HOOKS=false" >> $GITHUB_ENV
+        fi
+
         case "$susfs_version" in
           "v1.5.8")
             cd ./KernelSU-Next
@@ -461,6 +473,7 @@ runs:
 
     - name: Apply KSUN Hooks
       shell: bash
+      if: ${{ env.NEED_HOOKS == 'true' }}
       run: |
         set -euo pipefail
         cd "$CONFIG/kernel_platform/common"

@@ -215,13 +215,13 @@ runs:
       run: |
         set -euo pipefail
         echo "::group::Set build user/host"
-                
+
         BUILD_USER="OnePlus"
         BUILD_HOST="ubuntu-build"
-        
+
         echo "BUILD_USER=$BUILD_USER" >> "$GITHUB_ENV"
         echo "BUILD_HOST=$BUILD_HOST" >> "$GITHUB_ENV"
-        
+
         echo ""
         echo "✅ Build identity configured:"
         echo "   User: $BUILD_USER"

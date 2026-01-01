@@ -24,7 +24,8 @@ on:
           - OOS14
           - OOS15
           - FAST_BUILD_OOS15
-        default: FAST_BUILD_OOS15
+          - OOS16
+        default: OOS16
       ksun_branch:
         description: 'Enter KernelSU Next Branch or commit hash (blank for stable tag)'
         required: true
@@ -171,7 +172,7 @@ jobs:
       - name: Download Wirless Firmware Module for Nethunter 
         id: download_external
         env:
-          SOURCE_REPO: 0x-br0k3n/Nethunter-Wireless-Firmware 
+          SOURCE_REPO: nullptr-t-oss/Nethunter-Wireless-Firmware 
         run: |
           echo "--- Downloading Latest Release Asset from $SOURCE_REPO ---"
           

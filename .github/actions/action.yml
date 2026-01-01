@@ -306,7 +306,6 @@ runs:
         cp ../../susfs4ksu/kernel_patches/50_add_susfs_in_${{ env.SUSFS_KERNEL_BRANCH }}.patch ./common/
         cp ../../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
-        cd ./KernelSU-Next
         susfs_version=$(grep '#define SUSFS_VERSION' ../common/include/linux/susfs.h | awk -F'"' '{print $2}')
         echo "SUSVER=$susfs_version" >> $GITHUB_ENV
         BASE_VERSION=10200

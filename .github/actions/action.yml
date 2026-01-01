@@ -482,6 +482,13 @@ runs:
             patch -p1 < "$patch_file"
         done
 
+     - name: Add other kernel patches to common kernel
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd "$CONFIG/kernel_platform/common"
+        patch -p1 --forward < "../../../kernel_patches/common/unicode_bypass_fix_6.1-.patch"
+
     - name: Add Nethunter inline configs
       shell: bash
       run: |

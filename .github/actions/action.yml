@@ -500,7 +500,7 @@ runs:
             patch -p1 < "$patch_file"
         done
 
-     - name: Add other kernel patches to common kernel
+    - name: Add other kernel patches to common kernel
       shell: bash
       run: |
         set -euo pipefail

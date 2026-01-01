@@ -169,7 +169,8 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Download Wirless Firmware Module for Nethunter 
+      - name: Download Wirless Firmware Module for Nethunter
+        if: ${{ inputs.release_type == 'Release' || inputs.release_type == 'Pre-release' }}
         id: download_external
         env:
           SOURCE_REPO: nullptr-t-oss/Nethunter-Wireless-Firmware 
@@ -202,6 +203,7 @@ jobs:
           echo "Finished downloading $EXPECTED_ASSET_NAME to $DOWNLOAD_DIR."
 
       - name: Generate and Create New Tag
+        if: ${{ inputs.release_type == 'Release' || inputs.release_type == 'Pre-release' }}
         run: |
           BASE_TAG="v2.0.0-r0"
           LATEST_TAG=$(gh api repos/$REPO_OWNER/$REPO_NAME/tags --jq '.[0].name')

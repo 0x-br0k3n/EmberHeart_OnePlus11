@@ -1,8 +1,11 @@
 # Updated repo : [Click Here](https://github.com/EmberHeart-Kernels/EmberHeart_OnePlus11)
 
-
 ![Banner](svgs/emberheart_light.svg#gh-light-mode-only)
 ![Banner](svgs/emberheart_dark.svg#gh-dark-mode-only)
+
+---
+[Guide to fix Unusually long boot times on A16 when using Nethunter](/a16_fix.md)
+---
 
 ### Your warranty is no longer valid!
 

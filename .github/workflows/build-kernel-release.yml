@@ -30,7 +30,7 @@ on:
         description: 'Enter KernelSU Next Branch or commit hash (blank for stable tag)'
         required: true
         type: string
-        default: next
+        default: dev
       optimize_level:
         description: "Compiler optimization level"
         required: true
@@ -121,7 +121,7 @@ jobs:
         uses: ./.github/actions
         with:
           op_config_json: ${{ toJSON(matrix) }}
-          ksun_branch: ${{ inputs.ksun_branch }}
+          ksun_branch_or_hash: ${{ inputs.ksun_branch }}
           susfs_commit_hash_or_branch: ${{ inputs.susfs_branch_or_commit }}
           optimize_level: ${{ inputs.optimize_level }}
           kernel_uname: ${{ inputs.kernel_uname }}
@@ -203,7 +203,7 @@ jobs:
 
       - name: Generate and Create New Tag
         run: |
-          BASE_TAG="v1.5.12-r0"
+          BASE_TAG="v2.0.0-r0"
           LATEST_TAG=$(gh api repos/$REPO_OWNER/$REPO_NAME/tags --jq '.[0].name')
           if [ -z "$LATEST_TAG" ]; then
             LATEST_TAG="$BASE_TAG"
@@ -258,7 +258,7 @@ jobs:
           
           ### Features
           - [+] KernelSU-Next / WildKSU Manager Support
-          - [+] SUSFS v1.5.12
+          - [+] SUSFS v2.0.0
           - [+] Wireguard Support
           - [+] Magic Mount Support
           - [+] Ptrace message leak fix for kernels < 5.16

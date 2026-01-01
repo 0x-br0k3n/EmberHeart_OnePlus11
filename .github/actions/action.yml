@@ -912,7 +912,7 @@ runs:
         {
           echo "### Kernel Build Summary"
           echo ""
-          echo "- Model: ${OP_MODEL}"
+          echo "- Model: ${{ env.OP_MODEL }}"
           echo "- Android: ${{ env.ANDROID_VER }}"
           echo "- Kernel Version: ${{ steps.save_metadata.outputs.kernel_version }}"
           echo "- Kernel Uname: ${{ env.KERNEL_UNAME }}"

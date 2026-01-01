@@ -369,7 +369,7 @@ runs:
         MSM="$KERNEL_PLATFORM/msm-kernel"
         OUT="$MSM/out"
         MODULES_SRC="$OUT/modules"
-        MODULES_ZIP="$CONFIG_DIR/artifacts/kernel_modules_${{ inputs.model }}.zip"
+        MODULES_ZIP="$CONFIG_DIR/artifacts/kernel_modules_${{ env.OP_MODEL }}.zip"
         mkdir -p "$CONFIG_DIR/artifacts"
         find "$MODULES_SRC" -type f -name '*.ko' -print0 | xargs -0 zip -j "$MODULES_ZIP"
         echo "Packaged kernel modules to $MODULES_ZIP"

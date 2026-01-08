@@ -266,6 +266,16 @@ runs:
         sed -i 's/$(CONFIG_RTW88)/m/g' Makefile
         sed -i '/^source "drivers\/net\/wireless\/realtek\/rtw88\/Kconfig"$/s/.*/ /' Kconfig
 
+    - name: Add rtl8812au
+      shell: bash
+      run: |
+        set -euo pipefail
+        KERNEL_PATH="$GITHUB_WORKSPACE/$CONFIG/kernel_platform"
+        MSM="$KERNEL_PATH/msm-kernel"
+        cd "$MSM/drivers/net/wireless/realtek/"
+        git clone https://github.com/Trijal08/rtl8812au.git
+        echo "obj-m		+= rtl8812au/" >> Makefile
+
     - name: Detect Clang (toolchain for build)
       shell: bash
       run: |

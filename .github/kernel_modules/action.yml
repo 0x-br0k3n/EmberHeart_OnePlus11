@@ -274,6 +274,11 @@ runs:
         MSM="$KERNEL_PATH/msm-kernel"
         cd "$MSM/drivers/net/wireless/realtek/"
         git clone https://github.com/Trijal08/rtl8812au.git
+        cd rtl8812au
+        sed -i 's/obj-$(CONFIG_RTL8812AU)/obj-m/g' Makefile
+        sed -i 's/CONFIG_PLATFORM_I386_PC = y/CONFIG_PLATFORM_I386_PC = n/g' Makefile
+        sed -i 's/CONFIG_PLATFORM_ANDROID_ARM64 = n/CONFIG_PLATFORM_ANDROID_ARM64 = y/g' Makefile
+        cd ..
         echo "obj-m		+= rtl8812au/" >> Makefile
 
     - name: Detect Clang (toolchain for build)

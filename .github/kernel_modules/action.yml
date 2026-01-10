@@ -328,6 +328,7 @@ runs:
         make O="$INSTALL_MOD_PATH" \
          ARCH=arm64 \
          LLVM=1 \
+         KERNEL_SRC="$KERNEL_PLATFORM" \
          WLAN_ROOT=$(pwd) \
          WLAN_COMMON_ROOT=../qca-wifi-host-cmn \
          CONFIG_CNSS2=y \
@@ -335,7 +336,7 @@ runs:
          CONFIG_BERYLLIUM=y \
          CONFIG_CNSS_KIWI_V2=y \
          MODNAME=kiwi_v2 \
-         modules
+         all
 
         #make -C ../../vendor/qcom/opensource/datarmnet-ext/aps M=../../vendor/qcom/opensource/datarmnet-ext/aps KERNEL_SRC=$KERNEL_PLATFORM/./msm-kernel O=$OUT LLVM=1 DEPMOD=depmod DTC=$KERNEL_PLATFORM/build/kernel/build-tools/path/linux-x86/dtc RMNET_CORE_INC_DIR=$CONFIG/vendor/qcom/opensource/datarmnet/core RMNET_CORE_PATH=vendor/qcom/opensource/datarmnet/core DATARMNET_CORE_PATH=datarmnet/core ANDROID_BUILD_TOP=$CONFIG KBUILD_MIXED_TREE=..//device/qcom/kalama-kernel
         

@@ -53,12 +53,12 @@ runs:
         jq -r 'to_entries[] | "OP_\(.key | ascii_upcase)=\(.value)"' /tmp/config.json >> "$GITHUB_ENV"
         echo "Parsed config:"
         jq '.' /tmp/config.json
-        
+
     - name: Set Manifest
       shell: bash
       run: |
         set -euo pipefail
-        echo "OP_MANIFEST=$OP_MANIFEST_${{ inputs.manifest }}" >> "$GITHUB_ENV"   
+        echo "OP_MANIFEST=$OP_MANIFEST_${{ inputs.manifest }}" >> "$GITHUB_ENV"
 
     - name: Validate Inputs
       shell: bash
@@ -70,22 +70,22 @@ runs:
         branch="$OP_BRANCH"
         manifest="$OP_MANIFEST"
         optimize='${{ inputs.optimize_level }}'
-    
+
         # Non-empty checks
         [[ -n "$model" ]] || { echo "Input 'model' cannot be empty"; exit 1; }
         [[ -n "$soc" ]] || { echo "Input 'soc' cannot be empty"; exit 1; }
         [[ -n "$branch" ]] || { echo "Input 'branch' cannot be empty"; exit 1; }
         [[ -n "$manifest" ]] || { echo "Input 'manifest' cannot be empty"; exit 1; }
-    
+
         # Basic format checks
         # soc: allow letters, digits, underscores, dashes (e.g., sm8650)
         if ! [[ "$soc" =~ ^[A-Za-z0-9_-]+$ ]]; then
           echo "Input 'soc' contains invalid characters. Allowed: letters, digits, underscore, dash"; exit 1
-        fi    
+        fi
         # branch: allow common ref patterns; spaces not allowed
         if ! [[ "$branch" =~ ^[A-Za-z0-9._/-]+$ ]]; then
           echo "Input 'branch' contains invalid characters. Allowed: letters, digits, ., _, -, /"; exit 1
-        fi    
+        fi
         # manifest: either HTTPS URL ending with .xml, or a filename ending with .xml (no spaces)
         if [[ "$manifest" == http*://* ]]; then
           if ! [[ "$manifest" =~ ^https:// ]]; then
@@ -226,7 +226,7 @@ runs:
         echo "✅ Build identity configured:"
         echo "   User: $BUILD_USER"
         echo "   Host: $BUILD_HOST"
-        echo "::endgroup::"    
+        echo "::endgroup::"
 
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2.19
@@ -312,22 +312,22 @@ runs:
 
         echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
         echo "KernelSU Next Version: $KSU_VERSION"
-        echo "✅ KernelSU Next added (commit: ${KSU_COMMIT_SHA:0:8})"
+        echo "KernelSU Next added (commit: ${KSU_COMMIT_SHA:0:8}) ✅"
         echo "::endgroup::"
 
     - name: Apply SUSFS Patches
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Applying SUSFS patches..."
         cd "$CONFIG/kernel_platform"
-        echo "Applying SUSFS patches..."
         cp ../../susfs4ksu/kernel_patches/50_add_susfs_in_${{ env.SUSFS_KERNEL_BRANCH }}.patch ./common/
         cp ../../susfs4ksu/kernel_patches/fs/* ./common/fs/
         cp ../../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
         cd ./KernelSU-Next
         susfs_version=$(grep '#define SUSFS_VERSION' ../common/include/linux/susfs.h | awk -F'"' '{print $2}')
         echo "SUSVER=$susfs_version" >> $GITHUB_ENV
-        echo "SusFS Version: $susfs_version"
+        echo "SuSFS Version: $susfs_version"
         cd ../
         # Function to compare semantic versions
         version_lte() {
@@ -376,7 +376,7 @@ runs:
             done
             echo "Patching Hook Mode!"
             patch -p1 --forward < "../../../kernel_patches/next/susfs_fix_patches/$susfs_version/overwrite_hook_mode.patch"
-            echo "Patching KSU_TOOLKIT Support for SusFS kernel!"
+            echo "Patching KSU_TOOLKIT Support for SuSFS kernel!"
             patch -p1 --forward < "../../../kernel_patches/next/susfs_fix_patches/$susfs_version/ksu_toolkit.patch"
             ;;
           *)
@@ -446,13 +446,15 @@ runs:
         else
           echo "Kernel >= $MIN_VERSION, skipping ptrace patch"
         fi
+        echo "SuSFS added ✅"
+        echo "::endgroup::"
 
     - name: Add BBG
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Adding BBG"
         cd "$CONFIG/kernel_platform"
-        echo "Adding BBG..."
         if ! wget -O- https://github.com/vc-teahouse/Baseband-guard/raw/main/setup.sh | bash -s fix_blkdev_rename; then
           echo "::warning::BBG setup script failed, continuing anyway"
         fi
@@ -461,7 +463,7 @@ runs:
         # cd ./KernelSU-Next
         # echo "Patching BBG Enhanced Security!"
         # patch -p1 --forward < "../../../kernel_patches/common/bbg_untrusted_cred.patch"
-        echo "✅ BBG LSM added"
+        echo "BBG LSM added ✅"
         echo "::endgroup::"
 
     - name: Apply KSUN Hooks
@@ -476,6 +478,7 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Adding KernelSU and SUSFS configs..."
         cd "$CONFIG/kernel_platform"
         # Remove indentation to avoid leading spaces
         cat >> common/arch/arm64/configs/gki_defconfig <<EOF
@@ -502,10 +505,14 @@ runs:
         CONFIG_TMPFS_POSIX_ACL=y
         EOF
 
+        echo "KernelSU and SUSFS configuration added ✅"
+        echo "::endgroup::"
+
     - name: Add Oneplus BBR
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Adding Oneplus BBR"
         cd "$CONFIG/kernel_platform"
         cat >> common/arch/arm64/configs/gki_defconfig <<EOF
         CONFIG_TCP_CONG_ADVANCED=y
@@ -514,27 +521,50 @@ runs:
         CONFIG_NET_SCH_FQ_CODEL=y
         EOF
 
+        echo "OnePlus BBR added ✅"
+        echo "::endgroup::"
+
     - name: Add my kernel patches to common kernel
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Applying my patches from my repo..."
         cd "$CONFIG/kernel_platform/common"
+
         for patch_file in ../../../my_patches/kernel_patches/op11/common/*.patch; do
             echo "Applying patch: $patch_file"
             patch -p1 < "$patch_file"
         done
 
+        echo "My kernel patches applied ❤️‍🔥"
+        echo "::endgroup::"
+
     - name: Add other kernel patches to common kernel
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Applying patches from wild kernels..."
         cd "$CONFIG/kernel_platform/common"
-        patch -p1 --forward < "../../../kernel_patches/common/unicode_bypass_fix_6.1-.patch"
+        patch -p1 --forward < "../../../kernel_patches/common/mem_opt_prefetch.patch"
+
+        sed -e 's/SYM_FUNC_START(__pi_memcmp)/SYM_FUNC_START_WEAK_PI(memcmp)/' -e 's/SYM_FUNC_END(__pi_memcmp)/SYM_FUNC_END_PI(memcmp)/' -e 's/SYM_FUNC_ALIAS_WEAK(memcmp, __pi_memcmp)/EXPORT_SYMBOL_NOKASAN(memcmp)/' "../../../kernel_patches/common/optimise_memcmp.patch" | patch -p1 --forward
+
+        patch -p1 --forward < "../../../kernel_patches/common/minimise_wakeup_time.patch"
+        patch -p1 --forward < "../../../kernel_patches/common/int_sqrt.patch"
+        patch -p1 --forward < "../../../kernel_patches/common/force_tcp_nodelay.patch"
+        patch -p1 --forward < "../../../kernel_patches/common/reduce_gc_thread_sleep_time.patch"
+        patch -p1 --forward < "../../../kernel_patches/common/add_timeout_wakelocks_globally.patch"
+        patch -p1 --forward < "../../../kernel_patches/common/f2fs_reduce_congestion.patch"
+        patch -p1 --forward < "../../../kernel_patches/common/reduce_freeze_timeout.patch"
+
+        echo "Other kernel patches applied 🔥"
+        echo "::endgroup::"
 
     - name: Add Nethunter inline configs
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Applying Nethunter configs..."
         cd "$CONFIG/kernel_platform"
         cat >> common/arch/arm64/configs/gki_defconfig <<EOF
         CONFIG_BT_HCIBTUSB=y
@@ -544,39 +574,39 @@ runs:
         CONFIG_BT_HCIBCM203X=y
         CONFIG_BT_HCIBPA10X=y
         CONFIG_BT_HCIBFUSB=y
-        
+
         CONFIG_USB_AIRSPY=y
         CONFIG_USB_HACKRF=y
-        
+
         CONFIG_CAN=y
         CONFIG_CAN_DEV=y
         CONFIG_CAN_CALC_BITTIMING=y
         CONFIG_CAN_LEDS=y
         CONFIG_CAN_VCAN=y
-        
+
         CONFIG_CAN_GRCAN=y
         CONFIG_CAN_XILINXCAN=y
-        
+
         # Bosch C_CAN/D_CAN devices
         CONFIG_CAN_C_CAN=y
         CONFIG_CAN_C_CAN_PLATFORM=y
         CONFIG_CAN_C_CAN_PCI=y
-        
+
         # Bosch CC770 and Intel AN82527 devices
         CONFIG_CAN_CC770=y
         CONFIG_CAN_CC770_ISA=y
         CONFIG_CAN_CC770_PLATFORM=y
-        
+
         # Bosch M_CAN devices
         CONFIG_CAN_M_CAN=y
         CONFIG_CAN_M_CAN_PCI=y
         CONFIG_CAN_M_CAN_PLATFORM=y
         CONFIG_CAN_M_CAN_TCAN4X5X=y
-        
+
         # CAN SPI interfaces
         CONFIG_CAN_HI311X=y
         CONFIG_CAN_MCP251X=y
-        
+
         # CAN USB interfaces
         CONFIG_CAN_8DEV_USB=y
         CONFIG_CAN_EMS_USB=y
@@ -584,13 +614,13 @@ runs:
         CONFIG_CAN_GS_USB=y
         CONFIG_CAN_KVASER_USB=y
         CONFIG_CAN_PEAK_USB=y
-        
+
         CONFIG_NETLINK_DIAG=y
         CONFIG_VSOCKETS=y
-        
+
         CONFIG_NET_SCHED=y
         CONFIG_NET_EMATCH_CANID=y
-        
+
         CONFIG_USB_SERIAL=y
         CONFIG_USB_SERIAL_CONSOLE=y
         CONFIG_USB_SERIAL_GENERIC=y
@@ -599,10 +629,14 @@ runs:
         CONFIG_USB_SERIAL_PL2303=y
         EOF
 
+        echo "Nethunter configs applied ✅"
+        echo "::endgroup::"
+
     - name: Add TTL Target Support
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Adding TTL support..."
         cd "$CONFIG/kernel_platform"
         cat >> common/arch/arm64/configs/gki_defconfig <<EOF
         CONFIG_IP_NF_TARGET_TTL=y
@@ -610,10 +644,14 @@ runs:
         CONFIG_IP6_NF_MATCH_HL=y
         EOF
 
+        echo "TTL support added ✅"
+        echo "::endgroup::"
+
     - name: Add IP SET Support
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Adding IP SET support..."
         cd "$CONFIG/kernel_platform"
         cat >> common/arch/arm64/configs/gki_defconfig <<EOF
         CONFIG_IP_SET=y
@@ -636,10 +674,14 @@ runs:
         CONFIG_IP_SET_LIST_SET=y
         EOF
 
+        echo "IP  SET support added ✅"
+        echo "::endgroup::"
+
     - name: Add Build based configs
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Applying build based configs..."
         cd "$CONFIG/kernel_platform"
         cat >> common/arch/arm64/configs/gki_defconfig <<EOF
         CONFIG_LTO_CLANG_THIN=y
@@ -652,11 +694,15 @@ runs:
         CONFIG_TRACEPOINTS=y
         EOF
 
+        echo "Build configs applied ✅"
+        echo "::endgroup::"
+
     - name: Save Build Metadata
       id: save_metadata
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Saving Build Metadata..."
         CONFIG_DIR="$GITHUB_WORKSPACE/$CONFIG"
         ARTIFACTS_DIR="$CONFIG_DIR/artifacts"
         cd "$ARTIFACTS_DIR"
@@ -664,20 +710,28 @@ runs:
         echo "ksu_version=${KSUVER:-unknown}" >> "$GITHUB_OUTPUT"
         echo "susfs_version=${SUSVER:-unknown}" >> "$GITHUB_OUTPUT"
 
+        echo "Build metadata saved ✅"
+        echo "::endgroup::"
+
     - name: Customize Kernel Branding
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Applying Kernel Branding..."
         KERNEL_PATH="$GITHUB_WORKSPACE/$CONFIG/kernel_platform"
         cd "$KERNEL_PATH/common"
         mkdir -p out
         CUSTOM_LOCALVERSION="-${ANDROID_VER}-${{ inputs.kernel_uname }}"
         echo "CUSTOM_LOCALVERSION=$CUSTOM_LOCALVERSION" >> "$GITHUB_ENV"
 
+        echo "Kernel branding applied ✅"
+        echo "::endgroup::"
+
     - name: Detect Clang (toolchain for build)
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Detecting Clang..."
         KP="$GITHUB_WORKSPACE/$CONFIG/kernel_platform"
         CLANG_FOUND=false
         for base in "$KP/prebuilts" "$KP/prebuilts-master"; do
@@ -699,6 +753,9 @@ runs:
         echo "CLANG_VERSION=$CLANG_VERSION" >> "$GITHUB_ENV"
         echo "Detected Clang: $CLANG_VERSION"
 
+        echo "Clang detected ✅"
+        echo "::endgroup::"
+
     - name: Build Kernel
       shell: bash
       env:
@@ -710,16 +767,16 @@ runs:
         COMMON="$KERNEL_PATH/common"
         cd "$COMMON"
         : > "$COMMON/.scmversion"
-        
+
         # Ensure Python warnings are suppressed for scripts invoked by make
         export PYTHONWARNINGS="${PYTHONWARNINGS}"
-        
+
         if [ -n "${CLANG_BIN_PATH:-}" ] && [ -x "${CLANG_BIN_PATH}/clang" ]; then
           export PATH="${CLANG_BIN_PATH}:$PATH"
         fi
-        
+
         export PATH="/usr/lib/ccache:$PATH"
-        
+
         export LLVM=1 LLVM_IAS=1
         export ARCH=arm64 SUBARCH=arm64
         export CROSS_COMPILE=aarch64-linux-android-
@@ -729,14 +786,14 @@ runs:
         OUT=out
         mkdir -p "$OUT"
         make O="$OUT" gki_defconfig
-        
+
         # LOCALVERSION branding
         if [ -n "${CUSTOM_LOCALVERSION:-}" ]; then
           scripts/config --file "$OUT/.config" --set-str LOCALVERSION "${CUSTOM_LOCALVERSION}"
           scripts/config --file "$OUT/.config" -d LOCALVERSION_AUTO || true
           sed -i 's/scm_version="$(scm_version --short)"/scm_version=""/' scripts/setlocalversion
         fi
-        
+
         # Optimize level config and flags
         if [ "${{ inputs.optimize_level }}" = "O3" ]; then
           scripts/config --file "$OUT/.config" -d CC_OPTIMIZE_FOR_PERFORMANCE
@@ -747,56 +804,58 @@ runs:
           scripts/config --file "$OUT/.config" -d CC_OPTIMIZE_FOR_PERFORMANCE_O3
           KCFLAGS_EXTRA="-O2"
         fi
-        
+
         # Consistent flags; include -pipe and disable stack protector
         KCFLAGS="-Wno-error -pipe -fno-stack-protector ${KCFLAGS_EXTRA}"
         KCPPFLAGS="-DCONFIG_OPTIMIZE_INLINING"
-        
+
         # Regenerate defaults after config edits
         make O="$OUT" olddefconfig
-        
+
         echo "Starting build with $(nproc --all) threads..."
         set -o pipefail
         make -j"$(nproc --all)" O="$OUT" KCFLAGS="$KCFLAGS" KCPPFLAGS="$KCPPFLAGS" 2>&1 | tee build.log
-        
+
         IMG="$OUT/arch/arm64/boot/Image"
         if [ ! -f "$IMG" ]; then
           echo "Kernel Image missing"
           exit 1
         fi
         sha256sum "$IMG" | tee "$OUT/Image.sha256"
-        echo "::endgroup::"          
+        echo "Kernel built 😆"
+        echo "::endgroup::"
 
     - name: Collect Build Stats / Validate Image
       id: collect_stats
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Collecting Build Stats..."
         KERNEL_PATH="$GITHUB_WORKSPACE/$CONFIG/kernel_platform"
         COMMON="$KERNEL_PATH/common"
         OUT="$COMMON/out"
         IMG="$OUT/arch/arm64/boot/Image"
-    
+
         WARNINGS=$(grep -i -E 'warning:' "$COMMON/build.log" | wc -l || true)
         echo "$WARNINGS" > "$OUT/warnings.txt"
-    
+
         if [ -f "$IMG" ]; then
           file "$IMG" > "$OUT/Image.file" || true
           KERNEL_UNAME=$(strings "$IMG" | grep -E 'Linux version.*#' | tail -n1 || true)
           echo "Kernel Uname: ${KERNEL_UNAME:-unknown}"
           echo "KERNEL_UNAME=${KERNEL_UNAME:-unknown}" >> "$GITHUB_ENV"
-    
+
           if ! file "$IMG" | grep -qi 'ARM64'; then
             echo "WARNING: Image does not appear to be ARM64:"
             file "$IMG" || true
           fi
-    
+
           MIN_SIZE=$((6*1024*1024))
           ACTUAL_SIZE=$(stat -c %s "$IMG" || echo 0)
           if [ "$ACTUAL_SIZE" -lt "$MIN_SIZE" ]; then
             echo "WARNING: Image size $ACTUAL_SIZE < $MIN_SIZE (suspicious)."
           fi
-    
+
           CALC_SHA=$(sha256sum "$IMG" | cut -d' ' -f1)
           if [ -f "$OUT/Image.sha256" ]; then
             REC_SHA=$(cut -d' ' -f1 "$OUT/Image.sha256" | tr -d '\n')
@@ -814,29 +873,33 @@ runs:
           KERNEL_UNAME="unknown"
           echo "KERNEL_UNAME=unknown" >> "$GITHUB_ENV"
         fi
-    
+
         echo "Image sha256: ${IMAGE_SHA256:-none}"
         echo "warnings=$WARNINGS" >> "$GITHUB_OUTPUT"
         echo "image_sha256=${IMAGE_SHA256:-}" >> "$GITHUB_OUTPUT"
+
+        echo "Build stats collected ✅"
+        echo "::endgroup::"
 
     - name: Create Kernel ZIP
       id: create_zip
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Creating AK3 zip..."
         CONFIG_DIR="$GITHUB_WORKSPACE/$CONFIG"
         IMAGE_PATH="$CONFIG_DIR/kernel_platform/common/out/arch/arm64/boot/Image"
         if [ ! -f "$IMAGE_PATH" ]; then
           echo "ERROR: Built Image not found"
           exit 1
         fi
-    
+
         # Put Image into AnyKernel3
         cp "$IMAGE_PATH" "$GITHUB_WORKSPACE/AnyKernel3/Image"
         cd "$GITHUB_WORKSPACE/AnyKernel3"
-        
+
         sed -i '7 c\kernel.string=EmberHeart Kernel by nullptr-t-oss' anykernel.sh
-        
+
         ZIP_NAME="AnyKernel3_${OP_MODEL}_${{ env.KERNEL_FULL_VER }}_Next_${KSUVER}_${SUSVER}.zip"
         ARTIFACTS_DIR="$CONFIG_DIR/artifacts"
         mkdir -p "$ARTIFACTS_DIR"
@@ -846,18 +909,22 @@ runs:
 
         # Keep only the flashable zip and the model metadata file (assumed already created earlier)
         find "$ARTIFACTS_DIR" -maxdepth 1 -type f ! -name "$ZIP_NAME" ! -name "${OP_MODEL}.txt" -delete
-    
+
         # Output for later steps (optional)
         echo "zip_name=$ZIP_NAME" >> "$GITHUB_OUTPUT"
-        
-    - name: Upload Boot Image
+
+        echo "AnyKernel3 zip created ✅"
+        echo "::endgroup::"
+
+    - name: Create Boot Image
       if: success() && steps.create_zip.conclusion == 'success'
       shell: bash
       run: |
         set -euo pipefail
+        echo "::group::Creating boot image..."
         CONFIG_DIR="$GITHUB_WORKSPACE/$CONFIG"
         IMAGE="$CONFIG_DIR/kernel_platform/common/out/arch/arm64/boot/Image"
-        
+
         cd "$GITHUB_WORKSPACE"
         mkdir -p boot
         # Download stock boot image
@@ -865,21 +932,24 @@ runs:
         unzip boot.zip
         # Download magiskboot binary
         wget https://github.com/magojohnji/magiskboot-linux/raw/refs/heads/main/x86_64/magiskboot
-        
+
         BOOT=$(ls | grep -E '*.img')
         MAGISKBOOT="./magiskboot"
-        
+
         chmod +x $MAGISKBOOT
-        
+
         echo -n "Unpacking boot image..."
         $MAGISKBOOT unpack $BOOT
         echo -n "Adding kernel to boot image..."
         mv -f $IMAGE kernel
         echo -n "Repacking boot image..."
         $MAGISKBOOT repack $BOOT
-        
+
         mv -f new-boot.img EmberHeart_boot.img
-        cp EmberHeart_boot.img "$CONFIG_DIR/artifacts/"     
+        cp EmberHeart_boot.img "$CONFIG_DIR/artifacts/"
+
+        echo "Boot image created ✅"
+        echo "::endgroup::"
 
     - name: Final Build Summary
       shell: bash
@@ -919,18 +989,18 @@ runs:
           echo "CCache Statistics :"
           echo "$(/usr/bin/ccache -s)"
         } >> "$GITHUB_STEP_SUMMARY"
-        
+
     - name: Cleanup old ccache
       shell: bash
       run: |
         set -euo pipefail
         echo "Deleting old ccache..."
         gh cache delete ccache-${{ env.CONFIG }}-kernel-${{ env.KERNEL_FULL_VER }}- || true
-        
+
     - name: Upload Artifacts
       if: success() && steps.create_zip.conclusion == 'success'
       uses: actions/upload-artifact@v4
       with:
         name: kernel-${{ env.CONFIG }}
         path: ${{ env.CONFIG }}/artifacts/
-        
+
